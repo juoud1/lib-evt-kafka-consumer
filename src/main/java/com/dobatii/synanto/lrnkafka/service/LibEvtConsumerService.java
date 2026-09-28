@@ -8,6 +8,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.dobatii.synanto.lrnkafka.data.entity.AuthorEntity;
 import com.dobatii.synanto.lrnkafka.data.entity.BookEntity;
@@ -33,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 
 @Service
+@Transactional
 @Slf4j
 public class LibEvtConsumerService {
 	
@@ -74,26 +76,71 @@ public class LibEvtConsumerService {
 		IO.println("L'enregistrement du nouvel Consumer Library Event " + libEvt + " \n est encours ...");
 		
 		// validation et traitement ....
-		var bookEntity = dtoToBookEntity(libEvt);
-		var authorEntity = dtoToAuthorEntity(libEvt);
-		var libEvtEntity = dtoToLibEvtEntity(libEvt);
+		var bookEntityToSave = dtoToBookEntity(libEvt);
+		var authorEntityToSave = dtoToAuthorEntity(libEvt);
+		var libEvtEntityToSave = dtoToLibEvtEntity(libEvt);
 		
-		var authorSaved = authorRepository.saveAndFlush(authorEntity);
+		var optAuthorSaved = checkExistanceAuthor(authorEntityToSave);
+		AuthorEntity authorSaved = null;
+		if (optAuthorSaved.isEmpty()) {
+			IO.println("Enregistrement du nouvel auteur.");
+			authorSaved = authorRepository.saveAndFlush(authorEntityToSave);
+		} else {
+			IO.println("L'auteur existe déjà");
+			IO.println("Données de l'auteur, récupérées.");
+			authorSaved = optAuthorSaved.get();
+		}
+		//var authorSaved = authorRepository.saveAndFlush(authorEntity);
 		
-		bookEntity.setBookAuthor(authorSaved);
-		var bookSaved = bookRepository.saveAndFlush(bookEntity);
+		bookEntityToSave.setBookAuthor(authorSaved);
+		var optBookSaved = checkExistanceBook(bookEntityToSave);
+		BookEntity bookSaved = null;
+		if (optBookSaved.isEmpty()) {
+			IO.println("Enregistrement du nouveau livre.");
+			bookSaved = bookRepository.saveAndFlush(bookEntityToSave);
+		} else {
+			IO.println("Le livre existe déjà");
+			IO.println("Données du livre, récupérées.");
+			bookSaved = optBookSaved.get();
+		}
+		//var bookSaved = bookRepository.saveAndFlush(bookEntityToSave);
 		
 //		bookEntity.setLibEvt(libEvtSaved);
 		
-		libEvtEntity.setBook(bookSaved);
-		var libEvtSaved = libEvtRepository.saveAndFlush(libEvtEntity);
+		libEvtEntityToSave.setBook(bookSaved);
+		var libEvtSaved = libEvtRepository.saveAndFlush(libEvtEntityToSave);
 		bookSaved.setLibEvt(libEvtSaved);
 		
 		bookSaved = bookRepository.saveAndFlush(bookSaved);
 		
-		IO.println("Author du book enregistré = " + authorSaved );
-		IO.println("bookSaved de l'événement enregistré = " + bookSaved);
+		IO.println("L'auteur du livre enregistré = " + authorSaved + " \n enregistré avec succès");
+		IO.println("Le livre de l'événement enregistré = " + bookSaved + " \n enregistré avec succès");
 		IO.println("Le nouvel événement " + libEvtSaved + " \n enregistré avec succès");
+	}
+	
+	private Optional<BookEntity> checkExistanceBook(BookEntity bookEntityToSave) {
+		IO.println("Vérification de l'existence du nouveau livre à créer est en cours...");
+		if (Objects.isNull(bookEntityToSave) || bookEntityToSave.getBookName().isBlank()) {
+			IO.println("ERREUR lors de la création du nouveau livre!");
+			throw new IllegalArgumentException("L'entité livre ou bien le nom du livre ne doit pas être null!");
+		}
+		
+		IO.println("Vérification de l'existence du nouveau livre avec succès.");
+		
+		return bookRepository.findByBookName(bookEntityToSave.getBookName());
+	}
+
+	
+	private Optional<AuthorEntity> checkExistanceAuthor(AuthorEntity authorEntityToSave) {
+		IO.println("Vérification de l'existence du nouvel auteur à créer est en cours...");
+		if (Objects.isNull(authorEntityToSave) || authorEntityToSave.getAuthorName().isBlank()) {
+			IO.println("ERREUR lors de la création du nouvel auteur!");
+			throw new IllegalArgumentException("L'entité auteur ou bien le nom de l'auteur ne doit pas être null!");
+		}
+		
+		IO.println("Vérification de l'existence du nouvel auteur avec succès.");
+		
+		return authorRepository.findByAuthorName(authorEntityToSave.getAuthorName());
 	}
 	
 	private void updateLibEvent (LibEvt libEvt) {
