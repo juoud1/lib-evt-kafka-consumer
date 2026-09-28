@@ -14,6 +14,8 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -41,9 +43,13 @@ public class LibEvtEntity extends AbstractPersistable<BigInteger> {
 	@Enumerated(EnumType.STRING)
 	private LibEvtType libEvtType;
 	
-	// 
-	@OneToOne(mappedBy = "libEvt")
 //	@ToString.Exclude
+	@OneToOne(cascade = {CascadeType.ALL})
+	// AU LIEU DE @JoinColumn(name = "lib_evt_id", referencedColumnName = "id")
+	// ON UTILISE @JoinTable voir https://www.baeldung.com/jpa-one-to-one
+	@JoinTable(name = "libevt_book", 
+		joinColumns = {@JoinColumn(name = "lib_evt_id", referencedColumnName = "id")},
+		inverseJoinColumns = {@JoinColumn(name="book_id", referencedColumnName = "id")})
 	private BookEntity book;
 	
 	private String libEvtCreatedBy;

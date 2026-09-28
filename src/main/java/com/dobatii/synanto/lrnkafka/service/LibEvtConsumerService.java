@@ -1,8 +1,6 @@
 package com.dobatii.synanto.lrnkafka.service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
@@ -76,6 +74,77 @@ public class LibEvtConsumerService {
 		IO.println("L'enregistrement du nouvel Consumer Library Event " + libEvt + " \n est encours ...");
 		
 		// validation et traitement ....
+		var libEvtEntityToSave = dtoToLibEvtEntity(libEvt);
+		var libEvtSaved = libEvtRepository.saveAndFlush(libEvtEntityToSave);
+		
+		var bookEntityToSave = dtoToBookEntity(libEvt);
+		var authorEntityToSave = dtoToAuthorEntity(libEvt);
+		
+		AuthorEntity authorSaved = saveAuthor(authorEntityToSave);
+		
+		// Manually processing one to one relationship using joinTable
+		BookEntity bookSaved = null;
+		var optBookSaved = saveBook(bookEntityToSave, authorSaved, libEvtSaved);;
+		if (optBookSaved.isPresent()) {
+			bookSaved = optBookSaved.get();
+			libEvtSaved.setBook(bookSaved);
+			libEvtRepository.saveAndFlush(libEvtSaved);
+			
+		} else { // Si le livre existe déjà dans la bdd, inutile de sauvegarder libEventEntity
+			libEvtRepository.delete(libEvtEntityToSave);
+		}
+	
+		IO.println("L'auteur du livre enregistré = " + authorSaved + " \n enregistré avec succès");
+		IO.println("Le livre de l'événement enregistré = " + bookSaved + " \n enregistré avec succès");
+		IO.println("Le nouvel événement " + libEvtSaved + " \n enregistré avec succès");
+	}
+	
+	private Optional<BookEntity> saveBook(BookEntity bookEntityToSave, AuthorEntity savedAuthorEntity,
+								LibEvtEntity savedLibEvtEntity) {
+		
+		if (Objects.isNull(bookEntityToSave)){
+			IO.println("ERREUR : livre à enregistrer est null ou vide!");
+			throw new IllegalArgumentException("Le livre à enregistrer ne doit pas être null ou vide!");
+		}
+		
+		bookEntityToSave.setBookAuthor(savedAuthorEntity);	
+		bookEntityToSave.setLibEvt(savedLibEvtEntity);
+		var optBookSaved = checkExistanceBook(bookEntityToSave);
+		
+		BookEntity bookSaved = null;
+		if (optBookSaved.isEmpty()) {
+			IO.println("Enregistrement du nouveau livre.");
+			bookSaved = bookRepository.saveAndFlush(bookEntityToSave);
+		} else {
+			IO.println("Le livre existe déjà");
+			IO.println("Données du livre ignorées.");
+			//bookSaved = optBookSaved.get();
+		}
+		
+		return Optional.ofNullable(bookSaved);
+	}
+	
+	private AuthorEntity saveAuthor(AuthorEntity authorEntityToSave) {
+		var optAuthorSaved = checkExistanceAuthor(authorEntityToSave);
+		
+		AuthorEntity authorSaved = null;
+		if (optAuthorSaved.isEmpty()) {
+			IO.println("Enregistrement du nouvel auteur.");
+			authorSaved = authorRepository.saveAndFlush(authorEntityToSave);
+		} else {
+			IO.println("L'auteur existe déjà");
+			IO.println("Données de l'auteur, récupérées.");
+			authorSaved = optAuthorSaved.get();
+		}
+		
+		return authorSaved;
+	}
+	
+	private void saveLibEvent_old (LibEvt libEvt) {
+		
+		IO.println("L'enregistrement du nouvel Consumer Library Event " + libEvt + " \n est encours ...");
+		
+		// validation et traitement ....
 		var bookEntityToSave = dtoToBookEntity(libEvt);
 		var authorEntityToSave = dtoToAuthorEntity(libEvt);
 		var libEvtEntityToSave = dtoToLibEvtEntity(libEvt);
@@ -117,7 +186,7 @@ public class LibEvtConsumerService {
 		IO.println("Le livre de l'événement enregistré = " + bookSaved + " \n enregistré avec succès");
 		IO.println("Le nouvel événement " + libEvtSaved + " \n enregistré avec succès");
 	}
-	
+
 	private Optional<BookEntity> checkExistanceBook(BookEntity bookEntityToSave) {
 		IO.println("Vérification de l'existence du nouveau livre à créer est en cours...");
 		if (Objects.isNull(bookEntityToSave) || bookEntityToSave.getBookName().isBlank()) {
