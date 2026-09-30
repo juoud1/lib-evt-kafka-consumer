@@ -44,12 +44,7 @@ public class LibEvtEntity extends AbstractPersistable<BigInteger> {
 	private LibEvtType libEvtType;
 	
 //	@ToString.Exclude
-	@OneToOne(cascade = {CascadeType.ALL})
-	// AU LIEU DE @JoinColumn(name = "lib_evt_id", referencedColumnName = "id")
-	// ON UTILISE @JoinTable voir https://www.baeldung.com/jpa-one-to-one
-	@JoinTable(name = "libevt_book", 
-		joinColumns = {@JoinColumn(name = "lib_evt_id", referencedColumnName = "id")},
-		inverseJoinColumns = {@JoinColumn(name="book_id", referencedColumnName = "id")})
+	@OneToOne(mappedBy = "libEvt")
 	private BookEntity book;
 	
 	private String libEvtCreatedBy;

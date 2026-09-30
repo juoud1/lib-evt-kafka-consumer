@@ -69,7 +69,7 @@ public class LibEvtConsumerService {
 		IO.println("L'événement " + libEvtConsumer + " \n traité avec succès");
 	}
 	
-	private void saveLibEvent (LibEvt libEvt) {
+	private void saveLibEvent_old (LibEvt libEvt) {
 		
 		IO.println("L'enregistrement du nouvel Consumer Library Event " + libEvt + " \n est encours ...");
 		
@@ -96,6 +96,71 @@ public class LibEvtConsumerService {
 	
 		IO.println("L'auteur du livre enregistré = " + authorSaved + " \n enregistré avec succès");
 		IO.println("Le livre de l'événement enregistré = " + bookSaved + " \n enregistré avec succès");
+		IO.println("Le nouvel événement " + libEvtSaved + " \n enregistré avec succès");
+	}
+	
+	private void saveLibEvent (LibEvt libEvt) {
+		
+		IO.println("L'enregistrement du nouvel Consumer Library Event " + libEvt + " \n est encours ...");
+		
+		// validation et traitement ....
+		var authorEntityToSave = dtoToAuthorEntity(libEvt);
+		AuthorEntity authorSaved = saveAuthor(authorEntityToSave);
+		
+		var bookEntityToSave = dtoToBookEntity(libEvt);
+		var libEvtEntityToSave = dtoToLibEvtEntity(libEvt);
+		
+//		var optAuthorSaved = checkExistanceAuthor(authorEntityToSave);
+//		AuthorEntity authorSaved = null;
+//		if (optAuthorSaved.isEmpty()) {
+//			IO.println("Enregistrement du nouvel auteur.");
+//			authorSaved = authorRepository.saveAndFlush(authorEntityToSave);
+//		} else {
+//			IO.println("L'auteur existe déjà");
+//			IO.println("Données de l'auteur, récupérées.");
+//			authorSaved = optAuthorSaved.get();
+//		}
+		//var authorSaved = authorRepository.saveAndFlush(authorEntity);
+		
+		LibEvtEntity libEvtSaved = null;
+		
+		bookEntityToSave.setBookAuthor(authorSaved);
+		var optBookSaved = checkExistanceBook(bookEntityToSave);
+		BookEntity bookSaved = null;
+		if (optBookSaved.isEmpty()) {
+			IO.println("Enregistrement du nouveau livre.");
+			bookSaved = bookRepository.saveAndFlush(bookEntityToSave);
+			
+			libEvtEntityToSave.setBook(bookSaved);
+//			var libEvtSaved = libEvtRepository.saveAndFlush(libEvtEntityToSave);
+			libEvtSaved = libEvtRepository.saveAndFlush(libEvtEntityToSave);
+			bookSaved.setLibEvt(libEvtSaved);
+			
+			bookSaved = bookRepository.saveAndFlush(bookSaved);
+			
+			IO.println("L'auteur du livre enregistré = " + authorSaved + " \n enregistré avec succès");
+			IO.println("Le livre de l'événement enregistré = " + bookSaved + " \n enregistré avec succès");
+			IO.println("Le nouvel événement " + libEvtSaved + " \n enregistré avec succès");
+		} 
+		/*else {
+			IO.println("Le livre existe déjà");
+			IO.println("Données du livre, récupérées.");
+			bookSaved = optBookSaved.get();
+		}*/
+		//var bookSaved = bookRepository.saveAndFlush(bookEntityToSave);
+		
+//		bookEntity.setLibEvt(libEvtSaved);
+		
+		/*
+		libEvtEntityToSave.setBook(bookSaved);
+		var libEvtSaved = libEvtRepository.saveAndFlush(libEvtEntityToSave);
+		bookSaved.setLibEvt(libEvtSaved);
+		
+		bookSaved = bookRepository.saveAndFlush(bookSaved);
+		*/
+		
+		IO.println("L'auteur du livre enregistré = " + authorSaved + " \n enregistré avec succès");
+		IO.println("Le livre de l'événement existe déjà = " + bookSaved + " \n enregistré avec succès");
 		IO.println("Le nouvel événement " + libEvtSaved + " \n enregistré avec succès");
 	}
 	
@@ -140,52 +205,7 @@ public class LibEvtConsumerService {
 		return authorSaved;
 	}
 	
-	private void saveLibEvent_old (LibEvt libEvt) {
-		
-		IO.println("L'enregistrement du nouvel Consumer Library Event " + libEvt + " \n est encours ...");
-		
-		// validation et traitement ....
-		var bookEntityToSave = dtoToBookEntity(libEvt);
-		var authorEntityToSave = dtoToAuthorEntity(libEvt);
-		var libEvtEntityToSave = dtoToLibEvtEntity(libEvt);
-		
-		var optAuthorSaved = checkExistanceAuthor(authorEntityToSave);
-		AuthorEntity authorSaved = null;
-		if (optAuthorSaved.isEmpty()) {
-			IO.println("Enregistrement du nouvel auteur.");
-			authorSaved = authorRepository.saveAndFlush(authorEntityToSave);
-		} else {
-			IO.println("L'auteur existe déjà");
-			IO.println("Données de l'auteur, récupérées.");
-			authorSaved = optAuthorSaved.get();
-		}
-		//var authorSaved = authorRepository.saveAndFlush(authorEntity);
-		
-		bookEntityToSave.setBookAuthor(authorSaved);
-		var optBookSaved = checkExistanceBook(bookEntityToSave);
-		BookEntity bookSaved = null;
-		if (optBookSaved.isEmpty()) {
-			IO.println("Enregistrement du nouveau livre.");
-			bookSaved = bookRepository.saveAndFlush(bookEntityToSave);
-		} else {
-			IO.println("Le livre existe déjà");
-			IO.println("Données du livre, récupérées.");
-			bookSaved = optBookSaved.get();
-		}
-		//var bookSaved = bookRepository.saveAndFlush(bookEntityToSave);
-		
-//		bookEntity.setLibEvt(libEvtSaved);
-		
-		libEvtEntityToSave.setBook(bookSaved);
-		var libEvtSaved = libEvtRepository.saveAndFlush(libEvtEntityToSave);
-		bookSaved.setLibEvt(libEvtSaved);
-		
-		bookSaved = bookRepository.saveAndFlush(bookSaved);
-		
-		IO.println("L'auteur du livre enregistré = " + authorSaved + " \n enregistré avec succès");
-		IO.println("Le livre de l'événement enregistré = " + bookSaved + " \n enregistré avec succès");
-		IO.println("Le nouvel événement " + libEvtSaved + " \n enregistré avec succès");
-	}
+	
 
 	private Optional<BookEntity> checkExistanceBook(BookEntity bookEntityToSave) {
 		IO.println("Vérification de l'existence du nouveau livre à créer est en cours...");
