@@ -14,6 +14,8 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
@@ -41,9 +43,8 @@ public class LibEvtEntity extends AbstractPersistable<BigInteger> {
 	@Enumerated(EnumType.STRING)
 	private LibEvtType libEvtType;
 	
-	// 
-	@OneToOne(mappedBy = "libEvt")
 //	@ToString.Exclude
+	@OneToOne(mappedBy = "libEvt")
 	private BookEntity book;
 	
 	private String libEvtCreatedBy;

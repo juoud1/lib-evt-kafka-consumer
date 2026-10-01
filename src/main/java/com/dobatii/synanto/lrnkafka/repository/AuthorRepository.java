@@ -1,7 +1,7 @@
 package com.dobatii.synanto.lrnkafka.repository;
 
 import java.math.BigInteger;
-import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -17,5 +17,5 @@ import com.dobatii.synanto.lrnkafka.data.entity.AuthorEntity;
  */
 
 public interface AuthorRepository extends JpaRepository<AuthorEntity, BigInteger> {
-	public List<AuthorEntity> findByAuthorName (String authorName);
+	public Optional<AuthorEntity> findByAuthorName (String authorName);
 }

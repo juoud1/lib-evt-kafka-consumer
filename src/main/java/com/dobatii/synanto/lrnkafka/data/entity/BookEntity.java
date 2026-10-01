@@ -18,6 +18,8 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinColumns;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.OneToOne;
@@ -54,7 +56,11 @@ public class BookEntity extends AbstractPersistable<BigInteger> {
 	private AuthorEntity bookAuthor;
 	
 	@OneToOne(cascade = {CascadeType.ALL})
-	@JoinColumn(name = "lib_evt_id", referencedColumnName = "id")
+	// AU LIEU DE @JoinColumn(name = "lib_evt_id", referencedColumnName = "id")
+	// ON UTILISE @JoinTable voir https://www.baeldung.com/jpa-one-to-one
+	@JoinTable(name = "libevt_book", 
+		joinColumns = {@JoinColumn(name = "book_id", referencedColumnName = "id")},
+		inverseJoinColumns = {@JoinColumn(name="lib_evt_id", referencedColumnName = "id")})
 	LibEvtEntity libEvt;
 	
 	private String bookCreatedBy;
