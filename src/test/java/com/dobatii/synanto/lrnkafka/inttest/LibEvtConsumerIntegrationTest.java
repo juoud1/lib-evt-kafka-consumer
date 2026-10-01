@@ -2,6 +2,7 @@ package com.dobatii.synanto.lrnkafka.inttest;
 
 import static org.assertj.core.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.ArgumentMatchers.isA;
 import static org.mockito.Mockito.doCallRealMethod;
 
@@ -39,7 +40,7 @@ import com.dobatii.synanto.lrnkafka.util.enums.LibEvtType;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 //@AutoConfigureTestRestTemplate
-@EmbeddedKafka(topics="lib-evt-topic",partitions = 1, controlledShutdown = true)
+@EmbeddedKafka(topics= {"lib-evt-topic"},partitions = 1, controlledShutdown = true)
 @TestPropertySource(properties = {"spring.kafka.producer.bootstrap-servers=${spring.embedded.kafka.brokers}",
 									"spring.kafka.consumer.bootstrap-servers=${spring.embedded.kafka.brokers}"})
 @DirtiesContext
@@ -49,7 +50,6 @@ public class LibEvtConsumerIntegrationTest {
 	EmbeddedKafkaBroker embeddedKafkaBroker;
 	
 	@Autowired
-//	@InjectMocks
 	KafkaTemplate<Integer, String> kafkaTemplate;
 	
 	@Autowired
@@ -72,6 +72,10 @@ public class LibEvtConsumerIntegrationTest {
 		for(MessageListenerContainer messageListenerContainer : endpointRegistry.getListenerContainers()) {
 			ContainerTestUtils.waitForAssignment(messageListenerContainer, embeddedKafkaBroker.getPartitionsPerTopic());
 		}
+		
+		IO.println("BrokersAsString : " + embeddedKafkaBroker.getBrokersAsString());
+		IO.println("getPartitionsPerTopic : " + embeddedKafkaBroker.getPartitionsPerTopic());
+		IO.println("Topics : " + embeddedKafkaBroker.getTopics());
 	}
 	
 	@AfterEach
@@ -79,10 +83,13 @@ public class LibEvtConsumerIntegrationTest {
 		libEvtRepository.deleteAll();
 	}
 	
-//	@Disabled
-//	@SuppressWarnings("unchecked")
 	@Test
 	void publishNewLibEvt() throws InterruptedException, ExecutionException {
+		
+		IO.println("BrokersAsString : " + embeddedKafkaBroker.getBrokersAsString());
+		IO.println("getPartitionsPerTopic : " + embeddedKafkaBroker.getPartitionsPerTopic());
+		IO.println("Topics : " + embeddedKafkaBroker.getTopics());
+		
 		//GIVEN
 		String jsonInput = "{\"libEvtId\":null,\"libEvtType\":\"NEW\",\"book\":{\"bookId\":123,\"bookName\":\"Abby ti Dongongo\",\"bookAuthor\":{\"authorId\":3, \"authorName\":\"Dobtiia\"}, \"pubDate\":\"2026-01-07\"}}";
 		kafkaTemplate.sendDefault(jsonInput).get();
@@ -98,10 +105,10 @@ public class LibEvtConsumerIntegrationTest {
 		latch.await(4, TimeUnit.SECONDS);
 		
 		doCallRealMethod().when(libEvtConsumer).listenMessage(isA(ConsumerRecord.class));
-		//libEvtConsumer.listenMessage(libEvtConsumerRecord);
+		libEvtConsumer.listenMessage(libEvtConsumerRecord);
 		
 		doCallRealMethod().when(consumerService).processConsumerLibEvt(isA(LibEvt.class));
-		//consumerService.processConsumerLibEvt(libevt);
+		consumerService.processConsumerLibEvt(libevt);
 		
 		//THEN 
 		// verify ne fonctionne pas ?
@@ -110,8 +117,12 @@ public class LibEvtConsumerIntegrationTest {
 //		verify(consumerService, timeout(1)).processConsumerLibEvt(libevt);
 																				
 		var libEvts = libEvtRepository.findAll();
-		assertEquals(0, libEvts.size());
-//		libEvts.forEach(e -> IO.println("e dans testIT " + e));
+		assertEquals(1, libEvts.size());
+		libEvts.forEach(levt -> {
+			IO.println("levt dans testIT " + levt);
+			assertNotNull(levt.getId());
+			assertEquals(LibEvtType.NEW, levt.getLibEvtType());
+		});
 	}
 	
 	@Disabled

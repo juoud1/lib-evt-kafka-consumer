@@ -60,9 +60,17 @@
 <!--	        <artifactId>spring-boot-starter-h2-console</artifactId>-->
 <!--	        <version>${h2.version}</version>-->
 <!--	    </dependency>-->
+
+<!--		<dependency>-->
+<!--		    <groupId>org.springframework.boot</groupId>-->
+<!--		    <artifactId>spring-boot-autoconfigure-classic</artifactId>-->
+<!--		</dependency>-->
+<!--	Configuration Properties Migration
+		https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide -->
 		<dependency>
-		    <groupId>org.springframework.boot</groupId>
-		    <artifactId>spring-boot-autoconfigure-classic</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-properties-migrator</artifactId>
+			<scope>runtime</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
