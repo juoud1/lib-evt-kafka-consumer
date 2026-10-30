@@ -1,6 +1,8 @@
 package com.dobatii.synanto.lrnkafka.consumer;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
@@ -8,7 +10,6 @@ import org.springframework.stereotype.Component;
 import com.dobatii.synanto.lrnkafka.service.LibEvtConsumerService;
 import com.dobatii.synanto.lrnkafka.util.dto.LibEvt;
 
-import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.ObjectMapper;
 
 /**
@@ -20,8 +21,8 @@ import tools.jackson.databind.ObjectMapper;
  */
 
 @Component
-@Slf4j
 public class LibEvtConsumer {
+	private static final Logger LOGGER = LoggerFactory.getLogger(LibEvtConsumer.class);
 	
 	private final ObjectMapper objectMapper;
 	
@@ -47,7 +48,7 @@ public class LibEvtConsumer {
 	@KafkaListener(topics = {"lib-evts-topic"})
 	public void listenMessage(ConsumerRecord<Integer, String> consumerRecord) {
 		
-		IO.println("ConsumerRecord polled = " + consumerRecord);
+		LOGGER.info("ConsumerRecord polled: {}", consumerRecord);
 		processLibEvtRecord(consumerRecord);
 		
 	}
@@ -58,15 +59,15 @@ public class LibEvtConsumer {
 	 * @param consumerRecord Kafka record containing the serialized library event
 	 */
 	private void processLibEvtRecord(ConsumerRecord<Integer, String> consumerRecord) {
-		IO.println("Le traitement de polled Consumer record " + consumerRecord + " \n est encours ...");
+		LOGGER.info("Traitement du ConsumerRecord {} en cours ...", consumerRecord);
 		
 		// validation et traitement ....
 		LibEvt polledConsumerRecordValue = objectMapper.readValue(consumerRecord.value(), LibEvt.class);
-		IO.println("La valeur de polled Consumer record = " + polledConsumerRecordValue);
+		LOGGER.info("Valeur du ConsumerRecord désérialisée : {}", polledConsumerRecordValue);
 		
 		libEvtConsumerService.processConsumerLibEvt(polledConsumerRecordValue);
 		
-		IO.println("Le polled Consumer record " + consumerRecord + " \n traité avec succès");
+		LOGGER.info("ConsumerRecord traité avec succès : {}", consumerRecord);
 	}
 	
 }

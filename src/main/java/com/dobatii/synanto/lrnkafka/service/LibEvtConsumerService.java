@@ -7,6 +7,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.dobatii.synanto.lrnkafka.data.entity.AuthorEntity;
@@ -22,8 +24,6 @@ import com.dobatii.synanto.lrnkafka.util.enums.BookAvailabilityStatus;
 import com.dobatii.synanto.lrnkafka.util.enums.BookStatus;
 import com.dobatii.synanto.lrnkafka.util.enums.LibEvtType;
 
-import lombok.extern.slf4j.Slf4j;
-
 /**
  * LibEvt consumer for validating and traiting consumer record
  * 
@@ -33,8 +33,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 
 @Service
-@Slf4j
 public class LibEvtConsumerService {
+	private static final Logger LOGGER = LoggerFactory.getLogger(LibEvtConsumerService.class);
 	
 	private final LibEvtRepository libEvtRepository;
 	private final BookRepository bookRepository;
@@ -64,11 +64,11 @@ public class LibEvtConsumerService {
 	 * @throws IllegalArgumentException if the event is null or has an unsupported type
 	 */
 	public void processConsumerLibEvt(LibEvt libEvtConsumer) {
-		IO.println("Le traitement de Consumer Library Event " + libEvtConsumer + " \n est encours ...");
+		LOGGER.info("Le traitement de Consumer Library Event {} est en cours ...", libEvtConsumer);
 		
 		// validation et traitement ....
 		if (Objects.isNull(libEvtConsumer)) {
-			IO.println("ERREUR : les données de library event sont vides.");
+			LOGGER.error("ERREUR : les données de library event sont vides.");
 			throw new IllegalArgumentException("Aucune donnée à traiter ni à persister.");
 		}
 		
@@ -80,7 +80,7 @@ public class LibEvtConsumerService {
 		
 		}
 		
-		IO.println("L'événement " + libEvtConsumer + " \n traité avec succès");
+		LOGGER.info("L'événement {} traité avec succès", libEvtConsumer);
 	}
 	
 	/**
@@ -91,7 +91,7 @@ public class LibEvtConsumerService {
 	 */
 	private void saveLibEvent (LibEvt libEvt) {
 		
-		IO.println("L'enregistrement du nouvel Consumer Library Event " + libEvt + " \n est encours ...");
+		LOGGER.info("L'enregistrement du nouvel Consumer Library Event {} est en cours ...", libEvt);
 		
 		// validation et traitement ....
 		var bookEntity = dtoToBookEntity(libEvt);
@@ -111,9 +111,9 @@ public class LibEvtConsumerService {
 		
 		bookSaved = bookRepository.saveAndFlush(bookSaved);
 		
-		IO.println("Author du book enregistré = " + authorSaved );
-		IO.println("bookSaved de l'événement enregistré = " + bookSaved);
-		IO.println("Le nouvel événement " + libEvtSaved + " \n enregistré avec succès");
+		LOGGER.info("Auteur du livre enregistré : {}", authorSaved);
+		LOGGER.info("Livre enregistré pour l'événement : {}", bookSaved);
+		LOGGER.info("Nouvel événement enregistré avec succès : {}", libEvtSaved);
 	}
 	
 	/**
@@ -124,11 +124,11 @@ public class LibEvtConsumerService {
 	 */
 	private void updateLibEvent (LibEvt libEvt) {
 		
-		IO.println("L'enregistrement de la mise à jour de Consumer Library Event " + libEvt + " \n est encours ...");
+		LOGGER.info("Traitement de la mise à jour de Consumer Library Event {} en cours ...", libEvt);
 		
 		// validation et traitement ....
 		
-		IO.println("La mise à jour événement " + libEvt + " \n enregistré avec succès");
+		LOGGER.info("Mise à jour de l'événement traitée : {}", libEvt);
 	}
 	
 	/**
@@ -158,7 +158,7 @@ public class LibEvtConsumerService {
 		var bookAuth = authorRepository.findByAuthorName(libEvt.book()
 								.bookAuthor()
 								.authorName());
-		IO.println("Liste de bookAuth = " + bookAuth);
+		LOGGER.debug("Auteurs trouvés pour le livre : {}", bookAuth);
 		
 		Function<Book, BookEntity> f = b -> new BookEntity(b.bookName(), b.pubDate(), 
 				BookStatus.NEW, BookAvailabilityStatus.AVAILABLE, null,
