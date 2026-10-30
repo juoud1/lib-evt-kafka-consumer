@@ -40,6 +40,14 @@ public class LibEvtConsumerService {
 	private final BookRepository bookRepository;
 	private final AuthorRepository authorRepository;
 	
+	/**
+	 * Creates the service with the repositories used to persist library events,
+	 * books, and authors.
+	 *
+	 * @param libEvtRepository repository for library events
+	 * @param bookRepository repository for books
+	 * @param authorRepository repository for authors
+	 */
 	public LibEvtConsumerService(LibEvtRepository libEvtRepository,
 			BookRepository bookRepository,
 			AuthorRepository authorRepository) {
@@ -49,6 +57,12 @@ public class LibEvtConsumerService {
 		
 	}
 	
+	/**
+	 * Validates an event and routes it according to its type.
+	 *
+	 * @param libEvtConsumer event to process
+	 * @throws IllegalArgumentException if the event is null or has an unsupported type
+	 */
 	public void processConsumerLibEvt(LibEvt libEvtConsumer) {
 		IO.println("Le traitement de Consumer Library Event " + libEvtConsumer + " \n est encours ...");
 		
@@ -69,6 +83,12 @@ public class LibEvtConsumerService {
 		IO.println("L'événement " + libEvtConsumer + " \n traité avec succès");
 	}
 	
+	/**
+	 * Creates and persists a new author, book, and library event, then links the
+	 * persisted entities.
+	 *
+	 * @param libEvt event containing the book and author to save
+	 */
 	private void saveLibEvent (LibEvt libEvt) {
 		
 		IO.println("L'enregistrement du nouvel Consumer Library Event " + libEvt + " \n est encours ...");
@@ -96,6 +116,12 @@ public class LibEvtConsumerService {
 		IO.println("Le nouvel événement " + libEvtSaved + " \n enregistré avec succès");
 	}
 	
+	/**
+	 * Handles an update event. The current implementation logs the event without
+	 * modifying persisted entities.
+	 *
+	 * @param libEvt event to handle
+	 */
 	private void updateLibEvent (LibEvt libEvt) {
 		
 		IO.println("L'enregistrement de la mise à jour de Consumer Library Event " + libEvt + " \n est encours ...");
@@ -105,6 +131,12 @@ public class LibEvtConsumerService {
 		IO.println("La mise à jour événement " + libEvt + " \n enregistré avec succès");
 	}
 	
+	/**
+	 * Builds an author entity from the author included in a library event.
+	 *
+	 * @param libEvt event containing the author
+	 * @return the corresponding author entity
+	 */
 	private AuthorEntity dtoToAuthorEntity(LibEvt libEvt) {
 		var books = bookRepository.findAll().stream()
 						.filter(b -> Objects.nonNull(b.getBookAuthor()) && b.getBookAuthor().getAuthorName()
@@ -116,6 +148,12 @@ public class LibEvtConsumerService {
 		return f.apply(libEvt.book().bookAuthor());
 	}
 	
+	/**
+	 * Builds a book entity from the book included in a library event.
+	 *
+	 * @param libEvt event containing the book
+	 * @return the corresponding book entity
+	 */
 	private BookEntity dtoToBookEntity(LibEvt libEvt) {
 		var bookAuth = authorRepository.findByAuthorName(libEvt.book()
 								.bookAuthor()
@@ -131,6 +169,12 @@ public class LibEvtConsumerService {
 		return f.apply(libEvt.book()); 
 	}
 	
+	/**
+	 * Builds a library event entity from the supplied event.
+	 *
+	 * @param libEvt event to map
+	 * @return the corresponding library event entity
+	 */
 	private LibEvtEntity dtoToLibEvtEntity(LibEvt libEvt) {
 		//var book = bookRepository.findByBookName(libEvt.book().bookName()).orElseGet(BookEntity::new);
 		
